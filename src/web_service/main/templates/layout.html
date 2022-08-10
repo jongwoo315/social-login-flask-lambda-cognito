@@ -1,0 +1,23 @@
+<!doctype html>
+
+<title>{% block title %}JW{% endblock %} | my dashboard </title>
+<link rel="shortcut icon" href="{{ url_for('.static', filename='favicon.ico') }}">
+<link rel=stylesheet type=text/css href="{{ url_for('.static',filename='style.css') }}">
+
+<h1>메인 페이지</h1>
+
+<ul class=navigation>
+    {% if g.user %}
+        <li><a href="{{ url_for('logout.user_logout') }}">로그아웃  [유저명: {{ g.user.screen_name }}]</a>
+        <li><a href="{{ url_for('leave.user_leave') }}">회원탈퇴  [유저명: {{ g.user.screen_name }}]</a>
+    {% else %}
+        <li>로그인이 필요합니다.</li>
+    {% endif %}
+</ul>
+
+{% for message in get_flashed_messages() %}
+    <p class=message>{{ message }}
+{% endfor %}
+
+{% block body %}
+{% endblock %}

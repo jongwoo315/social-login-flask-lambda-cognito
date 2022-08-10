@@ -127,3 +127,16 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# flask config
+src/config.py
+
+# serverless
+.serverless/
+node_modules/
+vendor/
+package-lock.json
+serverless.yml
+
+# mac
+.DS_Store

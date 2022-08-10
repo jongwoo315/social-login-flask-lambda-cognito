@@ -1,0 +1,39 @@
+import os
+
+
+class Config(object):
+    DEBUG = ''
+    SQLALCHEMY_DATABASE_URI = ''
+    SECRET_KEY = ''
+
+
+class DevelopmentConfig(Config):
+    DEBUG = True
+    SQLALCHEMY_DATABASE_URI = 'mysql+pymysql://{user}:{pw}@{host}:{port}/{db}?charset=utf8'
+    SQLALCHEMY_DATABASE_URI_LOCAL = 'mysql+pymysql://{user}:{pw}@{host}:{port}/{db}?charset=utf8'
+    SECRET_KEY = 'dev'
+    TWITTER_CONSUMER_KEY = ''
+    TWITTER_CONSUMER_SECRET = ''
+    TWITTER_BEARER_TOKEN = ''
+    KAKAO_CONSUMER_KEY = ''
+    KAKAO_CONSUMER_SECRET = ''
+    COGNITO_USER_POOL_ID = os.environ['COGNITO_USER_POOL_ID']
+    COGNITO_APP_CLIENT_ID = os.environ['COGNITO_APP_CLIENT_ID']
+    COGNITO_APP_CLIENT_SECRET = ''  # cloudformation으로 가져올 수가 없다 (하드코딩)
+    COGNITO_URL = os.environ['COGNITO_URL']
+
+
+class ProductionConfig(Config):
+    DEBUG = True
+    SQLALCHEMY_DATABASE_URI = ''
+    SQLALCHEMY_DATABASE_URI_LOCAL = ''
+    SECRET_KEY = 'prod'
+    TWITTER_CONSUMER_KEY = ''
+    TWITTER_CONSUMER_SECRET = ''
+    TWITTER_BEARER_TOKEN = ''
+    KAKAO_CONSUMER_KEY = ''
+    KAKAO_CONSUMER_SECRET = ''
+    COGNITO_USER_POOL_ID = '' 
+    COGNITO_APP_CLIENT_ID = ''
+    COGNITO_APP_CLIENT_SECRET = ''
+    COGNITO_URL = ''

@@ -1,0 +1,122 @@
+service: insert-your-value
+
+plugins:
+  - serverless-wsgi
+  - serverless-export-env
+
+provider:
+  name: aws
+  runtime: python3.9
+  profile: insert-your-value
+  region: ${opt:region, 'ap-northeast-2'}
+  stage: ${opt:stage, 'dev'}
+  versionFunctions: false
+  timeout: 30
+  memorySize: 1024
+  environment:
+    PYTHONPATH: ":/opt"
+    STAGE: ${self:provider.stage, 'dev'}
+    REGION: ${self:provider.region, 'ap-northeast-2'}
+    COGNITO_USERPOOL_PREFIX: slflc
+    COGNITO_USER_POOL_ID: !Ref slflcUserPool
+    COGNITO_APP_CLIENT_ID: !Ref slflcUserPoolClient
+    ACCOUNT_ID: ${self:provider.profile}
+    COGNITO_URL:  # cognito > app integration > domain > cognito domain
+      Fn::Join:
+        - ""
+        - - "https://"
+          - !Ref slflcUserPoolDomain
+          - ".auth."
+          - ${self:provider.region}
+          - ".amazoncognito.com/"
+  vpc:
+    securityGroupIds:
+      - insert-your-value
+      - insert-your-value
+    subnetIds:
+      - insert-your-value
+      - insert-your-value
+  apiGateway:
+    binaryMediaTypes:
+      - '*/*'
+  iam:
+    role:
+      statements:
+        - Effect: "Allow"
+          Action:
+            - "cognito-idp:*"
+          Resource:
+            - !GetAtt slflcUserPool.Arn
+
+custom:
+  wsgi:
+    app: src/app.app
+    packRequirements: false
+
+layers:
+  PythonLibVendor:
+    path: vendor
+    name: PythonLibVendor
+    compatibleRuntimes:
+      - python3.9
+
+package:
+  individually: true
+  include:
+    - src/helper/**
+
+functions:
+  app:
+    handler: wsgi_handler.handler
+    layers:
+      - {Ref: PythonLibVendorLambdaLayer}
+    package:
+      include:
+        - src/app.py
+        - src/config.py
+        - src/models/**
+        - src/web_service/**
+      exclude:
+        - ./**
+    events:
+      - http: ANY /
+      - http: 'ANY /{proxy+}'
+
+resources:
+  Resources:
+    slflcUserPool:
+      Type: AWS::Cognito::UserPool
+      Properties:
+        UserPoolName: ${self:provider.environment.COGNITO_USERPOOL_PREFIX}-${self:provider.stage}
+
+    slflcUserPoolDomain:
+      Type: AWS::Cognito::UserPoolDomain
+      Properties:
+        UserPoolId: 
+          !Ref slflcUserPool
+        Domain: ${self:provider.environment.COGNITO_USERPOOL_PREFIX}-domain-${self:provider.stage}
+
+    slflcUserPoolClient:
+      Type: AWS::Cognito::UserPoolClient
+      Properties:
+        UserPoolId:
+          !Ref slflcUserPool
+        ClientName: ${self:provider.environment.COGNITO_USERPOOL_PREFIX}-client-${self:provider.stage}
+        AllowedOAuthFlows:
+          - implicit
+        AllowedOAuthFlowsUserPoolClient: true
+        AllowedOAuthScopes:
+          - phone
+          - email
+          - openid
+          - aws.cognito.signin.user.admin
+          - profile
+        CallbackURLs:
+          - https://<rest-api-id>.execute-api.ap-northeast-2.amazonaws.com/dev
+        ExplicitAuthFlows:
+          - ALLOW_USER_SRP_AUTH
+          - ALLOW_REFRESH_TOKEN_AUTH
+          - ALLOW_ADMIN_USER_PASSWORD_AUTH  # admin_initiate_auth() 관련: boto3문서에 지정된 authflow값들에서 ALLOW_ prefix를 붙여야 함
+        GenerateSecret: true  # app.py > tokengetter
+        SupportedIdentityProviders: 
+          - COGNITO
